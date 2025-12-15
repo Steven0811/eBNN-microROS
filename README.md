@@ -1,7 +1,7 @@
 # eBNN on NodeMCU with micro-ROS
 This repository contains a simple project implementing embedded neural network inference on ESP32 platforms using micro-ROS integration.
 ## System Architecture
-[!system_topology](images/system_topology.png)
+![system_topology](images/system_topology.png)
 ## Project Structure
 ```text
 eBNN-microROS
