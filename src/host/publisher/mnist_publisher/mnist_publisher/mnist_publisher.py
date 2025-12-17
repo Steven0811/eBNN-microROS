@@ -1,6 +1,6 @@
 import rclpy
 from rclpy.node import Node
-from std_msgs.msg import UInt8MultiArray, MultiArrayLayout, MultiArrayDimension, Bool
+from std_msgs.msg import UInt8MultiArray, MultiArrayLayout, MultiArrayDimension
 from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSHistoryPolicy
 import numpy as np
 
@@ -14,7 +14,8 @@ class MnistPublisher(Node):
             depth=10
         )
 
-        self.pub = self.create_publisher(UInt8MultiArray, '/mnist_input', qos_profile)
+        self.pub = self.create_publisher(UInt8MultiArray, '/mnist_image_to_ebnn', qos_profile)
+        self.pub_monitor = self.create_publisher(UInt8MultiArray, '/mnist_image_to_monitor', qos_profile)
 
         self.counter = 0
         self.dataset = None
@@ -46,9 +47,10 @@ class MnistPublisher(Node):
         msg.layout = layout
 
         self.pub.publish(msg)
+        self.pub_monitor.publish(msg)
 
         self.get_logger().info(
-            f"[{self.counter}] Published label=({label}) → /mnist_input, size={len(msg.data)}"
+            f"[{self.counter}] Published label=({label}) → /mnist_image_to_ebnn and /mnist_image_to_monitor, size={len(msg.data)}"
         )
 
         self.counter += 1
