@@ -1,47 +1,88 @@
 # eBNN on NodeMCU with micro-ROS
-This repository contains a simple project implementing embedded neural network inference on ESP32 platforms using micro-ROS integration.
+This system integrates ROS 2 and containerized deployment with embedded eBNN inference and PCA-based anomaly detection to monitor abnormal inputs and behaviors in micro-ROS-enabled devices.
 ## System Architecture
-![system_topology](images/system_topology.png)
+![system_topology](./images/system_topology.png)
 ## Project Structure
-```text
+```
 eBNN-microROS
-├── README.md
 ├── include
-│   ├── ebnn.h
-│   └── simple_mnist.h
+│   ├── ebnn.h
+│   └── simple_mnist.h
 ├── platformio.ini
 └── src
     ├── client
-    │   └── main.cpp
+    │   └── main.cpp
     └── host
         ├── agent
-        │   └── run_agent.sh
-        ├── publisher
-        │   ├── Dockerfile
-        │   ├── mnist_publisher
-        │   │   ├── mnist_publisher
-        │   │   │   ├── __init__.py
-        │   │   │   └── mnist_publisher.py
-        │   │   ├── package.xml
-        │   │   ├── resource
-        │   │   │   └── mnist_publisher
-        │   │   ├── setup.cfg
-        │   │   └── setup.py
-        │   └── run_publisher.sh
-        └── subscriber
+        │   └── run_agent.sh
+        ├── monitor
+        │   ├── Dockerfile
+        │   ├── ebnn_monitor
+        │   │   ├── ebnn_monitor
+        │   │   │   ├── __init__.py
+        │   │   │   ├── anomaly_detector.py
+        │   │   │   └── ebnn_monitor.py
+        │   │   ├── package.xml
+        │   │   ├── resource
+        │   │   │   └── ebnn_monitor
+        │   │   ├── setup.cfg
+        │   │   └── setup.py
+        │   ├── requirements.txt
+        │   ├── run_monitor.sh
+        │   └── tools
+        │       └── train_pca.py
+        └── publisher
             ├── Dockerfile
-            ├── mnist_subscriber
-            │   ├── mnist_subscriber
-            │   │   ├── __init__.py
-            │   │   └── mnist_subscriber.py
-            │   ├── package.xml
-            │   ├── resource
-            │   │   └── mnist_subscriber
-            │   ├── setup.cfg
-            │   └── setup.py
-            └── run_subscriber.sh
+            ├── mnist_publisher
+            │   ├── mnist_publisher
+            │   │   ├── __init__.py
+            │   │   └── mnist_publisher.py
+            │   ├── package.xml
+            │   ├── resource
+            │   │   └── mnist_publisher
+            │   ├── setup.cfg
+            │   └── setup.py
+            └── run_publisher.sh
 
 ```
+## Technology Stack
+### Operating System & Environment
+- **Ubuntu 22.04**
+- **Docker**
+    - Containerized deployment for ROS 2 nodes, agent, model training, and monitoring services
+    - Ensures reproducibility and environment consistency across systems
+### Robotics Middleware
+- **ROS 2 Humble**
+    - Node-based distributed architecture
+    - Asynchronous, topic-based communication
+    - Configurable QoS policies (Reliability, History, Depth
+- **micro-ROS**
+    - Deploy an embedded Binary Neural Network (eBNN) on microcontrollers
+    - Publish inference results to the ROS 2 network
+### Programming Language
+- **Python 3.10+**
+    - ROS 2 node implementation using `rclpy`
+    - Data preprocessing, inference monitoring, and anomaly detection
+- **C/C++**
+    - Embedded-side implementation for micro-ROS and eBNN deployment
+### Deep Learning Models
+- **eBNN (Embedded Binary Neural Network)**
+    - Deployed on embedded/microcontroller devices
+    - Ultra-low memory footprint and energy-efficient inference
+### Anomaly Detection
+- **PCA (Principal Component Analysis)**
+    - Learns a low-dimensional subspace representing normal MNIST data
+    - Uses reconstruction error as the anomaly score
+- **Scikit-learn**
+    - PCA model training and inference
+- **Joblib**
+    - Model serialization and cross-container loading
+### Datasets
+- **MNIST Dataset**
+    - Normal samples from official TensorFlow / PyTorch MNIST datasets
+    - Anomalous samples generated via:
+        - Random noise matrices
+        - Corrupted or partially occluded images
 ## Prerequisites
 ### Hardware Requirements
 |Item|Quantity|Notes|
@@ -69,19 +110,19 @@ eBNN-microROS
     # in PlatformIO CLI
     pio run -t upload --upload-port <your ESP32 port>
     ```
-5. Start agent
+5. Start agent.
     ```bash
     # Terminal 1: Flash firmware and start agent
     cd eBNN-microROS/src/host/agent
     bash run_agent.sh
     ```
-6. Start subscriber
+6. Start ebnn monitor.
     ```bash
     # Terminal 2: Run subscriber
-    cd eBNN-microROS/src/host/subscriber
-    bash run_subscriber.sh
+    cd eBNN-microROS/src/host/monitor
+    bash run_monitor.sh
     ```
-7. Start publisher
+7. Start publisher.
     ```bash
     # Terminal 3: Run publisher
     cd eBNN-microROS/src/host/publisher
