@@ -2,8 +2,7 @@
 
 docker build -t ebnn_monitor .
 
-docker run --rm \
-    -it \
-    --net host \
-    --name ebnn_monitor \
-    ebnn_monitor \
+docker run --rm -it \
+  -e FASTDDS_BUILTIN_TRANSPORTS=UDPv4 \
+  -e ROS_DOMAIN_ID=0 \
+  ebnn_monitor
