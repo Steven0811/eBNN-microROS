@@ -86,7 +86,7 @@ void setup() {
       &input_sub,
       &node,
       ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, UInt8MultiArray),
-      "/mnist_input");
+      "/mnist_image_to_ebnn");
   
   ret = rclc_executor_add_subscription(
       &executor,
