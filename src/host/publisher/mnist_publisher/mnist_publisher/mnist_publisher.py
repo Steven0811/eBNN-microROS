@@ -26,32 +26,46 @@ class MnistPublisher(Node):
         (_, _), (x_test, y_test) = mnist.load_data()
         self.dataset = x_test
         self.labels = y_test
-        self.get_logger().info(f"Loaded MNIST test data: {x_test.shape}")
 
-    def send_images(self, img: np.ndarray, label: int):
+    def generate_random_image(self):
+        return np.random.randint(0, 256, size=(28, 28), dtype=np.uint8)
+
+    def corrupt_mnist(self, img):
+        img = img.astype(np.float32)
+        x = np.random.randint(0, 20)
+        y = np.random.randint(0, 20)
+        img[x:x+8, y:y+8] = 255
+        return img.astype(np.uint8)
+
+    def send_images(self, img, label):
+        if self.counter < 20:
+            out_img = img
+            out_label = label
+        elif self.counter < 35:
+            out_img = self.corrupt_mnist(img)
+            out_label = -1
+        else:
+            out_img = self.generate_random_image()
+            out_label = -2
+
         msg = UInt8MultiArray()
-
-        img = img.astype(np.uint8).flatten()
-
-        msg.data = img.tolist()
+        msg.data = out_img.astype(np.uint8).flatten().tolist()
 
         layout = MultiArrayLayout()
         layout.data_offset = 0
 
         dim = MultiArrayDimension()
         dim.label = "mnist_image"
-        dim.size = len(msg.data) 
+        dim.size = len(msg.data)
         dim.stride = len(msg.data)
 
         layout.dim = [dim]
         msg.layout = layout
 
-        self.pub.publish(msg)
         self.pub_monitor.publish(msg)
+        self.pub.publish(msg)
 
-        self.get_logger().info(
-            f"[{self.counter}] Published label=({label}) → /mnist_image_to_ebnn and /mnist_image_to_monitor, size={len(msg.data)}"
-        )
+        self.get_logger().info(f"[{self.counter}] Published label=({out_label}) size={len(msg.data)}")
 
         self.counter += 1
 
@@ -61,21 +75,14 @@ def main(args=None):
     node.load_dataset()
 
     try:
-        if node.dataset is not None and len(node.dataset) > 1:
-            for i in range(50):
-                img = node.dataset[i]
-                label = node.labels[i]
-                node.send_images(img, label)
-                rclpy.spin_once(node, timeout_sec=0.5)
-        else:
-            node.get_logger().error("Dataset not loaded properly.")
+        for i in range(50):
+            node.send_images(node.dataset[i], node.labels[i])
+            rclpy.spin_once(node, timeout_sec=0.5)
     except KeyboardInterrupt:
         pass
     finally:
         node.destroy_node()
-        if rclpy.ok():
-            rclpy.shutdown()
-
+        rclpy.shutdown()
 
 if __name__ == '__main__':
     main()

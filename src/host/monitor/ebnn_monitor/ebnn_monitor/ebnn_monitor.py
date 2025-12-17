@@ -14,10 +14,11 @@ class EBNNMonitor(Node):
 
         self.detector = PCAAnomalyDetector(
             pca_model_path="models/pca_mnist.joblib",
-            threshold=0.01
+            threshold=0.025
         )
 
         self.latest_image_flat = None
+        self.image_counter = 0
 
         self.create_subscription(
             UInt8MultiArray,
@@ -56,9 +57,11 @@ class EBNNMonitor(Node):
         )
 
         if is_anomaly:
-            self.get_logger().warn(f"Anomaly detected | pred={pred} | score={score:.6f}")
+            self.get_logger().warn(f"Anomaly detected | image_counter={self.image_counter} | pred={pred} | score={score:.6f}")
         else:
-            self.get_logger().info(f"Valid prediction | pred={pred} | score={score:.6f}")
+            self.get_logger().info(f"Valid prediction | image_counter={self.image_counter} | pred={pred} | score={score:.6f}")
+
+        self.image_counter += 1
 
 def main(args=None):
     rclpy.init(args=args)
